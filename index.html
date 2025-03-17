@@ -80,20 +80,8 @@
         }
 
         /* Markdown styling */
-        .markdown h1, .markdown h2, .markdown h3, .markdown h4, .markdown h5, .markdown h6 {
-            margin: 1rem 0 0.5rem;
-            font-weight: bold;
-        }
-
-        .markdown h1 { font-size: 2rem; }
-        .markdown h2 { font-size: 1.75rem; }
-        .markdown h3 { font-size: 1.5rem; }
-        .markdown h4 { font-size: 1.25rem; }
-        .markdown h5 { font-size: 1.1rem; }
-        .markdown h6 { font-size: 1rem; }
-
         .markdown p {
-            margin: 0.5rem 0;
+            margin: 0.5rem 0; /* Consistent spacing for paragraphs */
         }
 
         .markdown em {
@@ -121,24 +109,32 @@
         .markdown blockquote {
             border-left: 4px solid #ccc;
             padding-left: 1rem;
-            margin-left: 0;
+            margin: 0.5rem 0; /* Reduced margins */
             color: #555;
         }
 
         .markdown ul, .markdown ol {
-            margin: 0.5rem 0;
+            margin: 0.5rem 0; /* Reduced margins */
             padding-left: 1.5rem;
         }
 
         .markdown hr {
             border: none;
             border-top: 1px solid #ccc;
-            margin: 1rem 0;
+            margin: 1rem 0; /* Slightly reduced spacing */
         }
 
         .markdown a {
             color: #007BFF;
             text-decoration: underline;
+        }
+
+        /* Custom styling for headers */
+        .markdown u.header {
+            font-weight: bold; /* Bold text */
+            text-decoration: none; /* Remove default underline */
+            color: red; /* Red text */
+            margin: 0.5rem 0; /* Minimal spacing */
         }
 
         @media (max-width: 768px) {
@@ -178,15 +174,17 @@
         const wordCount = document.getElementById('wordCount');
         const container = document.querySelector('.container');
 
-        // Enhanced Markdown parser
+        let markdownContent = ''; // Store raw Markdown content
+
+        // Updated Markdown parser
         function parseMarkdown(text) {
             // Headers (#, ##, ###, etc.)
-            text = text.replace(/^# (.*)$/gm, '<h1>$1</h1>');
-            text = text.replace(/^## (.*)$/gm, '<h2>$1</h2>');
-            text = text.replace(/^### (.*)$/gm, '<h3>$1</h3>');
-            text = text.replace(/^#### (.*)$/gm, '<h4>$1</h4>');
-            text = text.replace(/^##### (.*)$/gm, '<h5>$1</h5>');
-            text = text.replace(/^###### (.*)$/gm, '<h6>$1</h6>');
+            text = text.replace(/^# (.*)$/gm, '<u class="header">$1</u>');
+            text = text.replace(/^## (.*)$/gm, '<u class="header">$1</u>');
+            text = text.replace(/^### (.*)$/gm, '<u class="header">$1</u>');
+            text = text.replace(/^#### (.*)$/gm, '<u class="header">$1</u>');
+            text = text.replace(/^##### (.*)$/gm, '<u class="header">$1</u>');
+            text = text.replace(/^###### (.*)$/gm, '<u class="header">$1</u>');
 
             // Bold (**text**)
             text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
@@ -196,13 +194,6 @@
             text = text.replace(/`(.*?)`/g, '<code>$1</code>');
             // Blockquotes (> text)
             text = text.replace(/^>(.*)$/gm, '<blockquote>$1</blockquote>');
-            // Unordered Lists (- or *)
-            text = text.replace(/^- (.*)$/gm, '<li>$1</li>');
-            text = text.replace(/^\* (.*)$/gm, '<li>$1</li>');
-            text = text.replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>');
-            // Ordered Lists (1. ...)
-            text = text.replace(/^\d+\. (.*)$/gm, '<li>$1</li>');
-            text = text.replace(/(<li>.*<\/li>)/g, '<ol>$1</ol>');
             // Links ([text](url))
             text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
             // Images (![alt](url))
@@ -226,28 +217,14 @@
         function toggleEditMode() {
             const isEditable = editor.getAttribute('contenteditable') === 'true';
             if (!isEditable) {
-                // Switching to edit mode: save parsed HTML back to plain Markdown text
-                const markdownContent = editor.innerHTML
-                    .replace(/<h([1-6])>(.*?)<\/h[1-6]>/g, '#'.repeat('$1') + ' $2')
-                    .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
-                    .replace(/<em>(.*?)<\/em>/g, '*$1*')
-                    .replace(/<code>(.*?)<\/code>/g, '`$1`')
-                    .replace(/<blockquote>(.*?)<\/blockquote>/g, '> $1')
-                    .replace(/<ul>([\s\S]*?)<\/ul>/g, '$1')
-                    .replace(/<li>(.*?)<\/li>/g, '- $1')
-                    .replace(/<ol>([\s\S]*?)<\/ol>/g, '$1')
-                    .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)')
-                    .replace(/<img src="(.*?)" alt="(.*?)".*?>/g, '![$2]($1)')
-                    .replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, '```$1```')
-                    .replace(/<hr>/g, '---')
-                    .replace(/<p>(.*?)<\/p>/g, '$1\n\n');
+                // Switching to edit mode: restore raw Markdown
                 editor.textContent = markdownContent.trim();
                 editor.setAttribute('contenteditable', true);
                 container.classList.remove('disabled-editor');
                 toggleBtn.textContent = 'Disable Edit (Ctrl+E)';
             } else {
-                // Switching to read-only mode: render Markdown
-                const markdownContent = editor.textContent;
+                // Switching to read-only mode: save raw Markdown and render HTML
+                markdownContent = editor.textContent;
                 editor.innerHTML = parseMarkdown(markdownContent);
                 editor.setAttribute('contenteditable', false);
                 container.classList.add('disabled-editor');
@@ -258,7 +235,23 @@
         async function handlePaste() {
             try {
                 const clipboardText = await navigator.clipboard.readText();
+
+                // Clear the editor's content
+                editor.textContent = '';
+
+                // Temporarily enable editing to paste content
+                editor.setAttribute('contenteditable', true);
+
+                // Insert the pasted content
                 editor.textContent = clipboardText;
+
+                // Immediately switch back to read-only mode
+                markdownContent = clipboardText; // Save the pasted content
+                editor.innerHTML = parseMarkdown(markdownContent); // Render Markdown
+                editor.setAttribute('contenteditable', false);
+                container.classList.add('disabled-editor'); // Disable editing
+
+                // Update word count
                 updateCounts();
             } catch (err) {
                 console.error('Paste failed:', err);
