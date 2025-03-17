@@ -226,7 +226,7 @@
         function toggleEditMode() {
             const isEditable = editor.getAttribute('contenteditable') === 'true';
             if (!isEditable) {
-                // Switching to edit mode: save parsed HTML back to plain text
+                // Switching to edit mode: save parsed HTML back to plain Markdown text
                 const markdownContent = editor.innerHTML
                     .replace(/<h([1-6])>(.*?)<\/h[1-6]>/g, '#'.repeat('$1') + ' $2')
                     .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
