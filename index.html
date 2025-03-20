@@ -190,6 +190,7 @@
             text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             // Italic (*text*)
             text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            text = text.replace(/\_(.*?)\_/g, '<em>$1</em>');
             // Inline Code (`code`)
             text = text.replace(/`(.*?)`/g, '<code>$1</code>');
             // Blockquotes (> text)
